@@ -1,0 +1,41 @@
+#!/bin/bash
+# Re-apply hermes-miniapp patches after hermes auto-updates.
+# Installed by install.py to ~/.hermes/hermes-agent/.git/hooks/post-merge
+# Patch sources live at ~/.hermes/miniapp/ so they survive git reset --hard.
+
+MINIAPP_DIR="$HOME/.hermes/miniapp"
+PATCH="$MINIAPP_DIR/webapp.patch"
+WEBAPP_HTML="$MINIAPP_DIR/webapp-index.html"
+WEBAPP_DIR="$(git rev-parse --show-toplevel)/gateway/platforms/webapp"
+
+log() { echo "[hermes-miniapp] $(date '+%H:%M:%S') $*"; }
+
+if [ ! -f "$PATCH" ]; then
+  log "No patch file found at $PATCH — skipping"
+  exit 0
+fi
+
+cd "$(git rev-parse --show-toplevel)"
+
+# Check if already applied
+if grep -q "_handle_webapp_index" gateway/platforms/api_server.py 2>/dev/null; then
+  log "Patches already applied — skipping"
+  exit 0
+fi
+
+# Apply Python patches
+git apply --check "$PATCH" 2>/dev/null && git apply "$PATCH" 2>/dev/null
+status=$?
+
+# Restore webapp HTML
+if [ -f "$WEBAPP_HTML" ]; then
+  mkdir -p "$WEBAPP_DIR"
+  cp "$WEBAPP_HTML" "$WEBAPP_DIR/index.html"
+  log "Restored webapp/index.html"
+fi
+
+if [ $status -eq 0 ]; then
+  log "✓ hermes-miniapp patches applied successfully"
+else
+  log "⚠ Patch had conflicts — run 'python3 ~/projects/hermes-miniapp/install.py' to re-install"
+fi
