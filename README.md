@@ -4,8 +4,6 @@ A Telegram Mini App that gives you a full-screen mobile chat interface for your 
 
 Tap **Open App** in the bot menu or send `/app` to launch the interface. Features streaming responses, a live model/pricing selector, and slash command autocomplete.
 
-![screenshot placeholder](docs/screenshot.png)
-
 ---
 
 ## Features
